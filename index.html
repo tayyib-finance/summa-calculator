@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>СУММА — калькулятор рассрочки</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:22px 14px 40px;background:#f4f2f9;color:#211a31;font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.wrap{max-width:920px;margin:auto}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-weight:850;font-size:21px}
+.logo{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#2110d8,#761de2);color:white;font-weight:900}
+.box{padding:clamp(18px,4vw,32px);border-radius:20px;background:linear-gradient(145deg,#2110d8,#4a0ddd 60%,#761de2);color:white;box-shadow:0 14px 40px #25105a24}
+.box h1{font-size:clamp(25px,4vw,34px);margin:0 0 6px}
+.muted{opacity:.82;font-size:13px;margin:0 0 20px}
+.field{margin:0 0 15px}
+.field label,.label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+.input,textarea{width:100%;min-height:46px;padding:11px 13px;border:1px solid #e6e2ec;border-radius:10px;background:white;color:#211a31;font:inherit;outline:none}
+.input:focus,textarea:focus{border-color:#761de2;box-shadow:0 0 0 3px #761de222}
+.money{position:relative}
+.money .input{padding-right:44px}
+.money span{position:absolute;right:14px;top:12px;color:#555}
+.box .input{border:0;font-weight:700}
+.readonly{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid #ffffff66;border-radius:10px;background:#ffffff20}
+.readonly strong{font-size:19px}
+.pill{font-size:12px;padding:5px 9px;border-radius:50px;background:#ffffff30}
+input[type=range]{width:100%;accent-color:#d64add;margin:9px 0 2px}
+.ends,.termrow{display:flex;justify-content:space-between;font-size:12px;opacity:.82}
+.termrow{font-size:15px;opacity:1;margin:7px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}
+.stat{padding:13px 9px;border-radius:12px;background:#fff;color:#211a31;text-align:center}
+.stat span{display:block;min-height:34px;color:#625b6e;font-weight:700;font-size:12px}
+.stat b{display:block;margin-top:5px;color:#761de2;font-size:19px}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:650px;margin:20px auto 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:11px 15px;border:0;border-radius:10px;background:#fff;color:#2612d8;font:inherit;font-weight:800;text-align:center;text-decoration:none;cursor:pointer}
+.btn.secondary{border:1px solid #ffffffaa;background:#ffffff18;color:#fff}
+.btn.green{background:#13834a;color:white}
+.btn.soft{background:#eee9fb;color:#2814d1}
+.btn:hover{filter:brightness(1.04)}
+.note{text-align:center;font-size:11px;opacity:.8;margin:10px 0 0}
+.share{max-width:650px;margin:9px auto 0}
+.share .btn{width:100%}
+.footer{margin:16px 0 0;padding:13px;border:1px solid #e5e1eb;border-radius:12px;background:white;text-align:center;color:#706a7a;font-size:13px}
+.footer a{color:#2512d5;font-weight:750;text-decoration:none}
+.modal{position:fixed;z-index:10;inset:0;display:flex;justify-content:center;align-items:center;padding:12px;background:#140d27a8;overflow:auto}
+.modal[hidden]{display:none}
+.card{width:min(500px,100%);max-height:calc(100vh - 24px);overflow:auto;padding:22px;border-radius:17px;background:white;box-shadow:0 22px 70px #0004}
+.card.wide{width:min(640px,100%)}
+.mhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px}
+.mbrand{display:flex;align-items:center;gap:9px}
+.mbrand b{color:#2712d5;font-size:19px}
+.tag{display:block;color:#777;font-size:11px}
+.close{border:0;border-radius:50%;width:35px;height:35px;background:#f0edf6;color:#514864;font-size:22px;cursor:pointer}
+.card h2{font-size:20px;margin:0 0 5px}
+.help{font-size:13px;color:#746e80;margin:0 0 16px}
+.card .field label{color:#292335}
+.required{color:#a11}
+.success{padding:12px;border:1px solid #bfe5cf;border-radius:10px;background:#f0fff5;color:#24563a;font-size:13px}
+.success[hidden]{display:none}
+.message{max-height:210px;overflow:auto;padding:10px;border:1px solid #d6eadc;border-radius:8px;background:white;color:#24362a;white-space:pre-wrap;font-size:12px}
+.twobuttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stepbar{display:flex;gap:8px;margin:12px 0 18px}
+.stepbar span{flex:1;padding:8px 5px;border-radius:8px;background:#f1eef7;color:#777;text-align:center;font-size:12px}
+.stepbar .on{background:#2913d8;color:white}
+.step[hidden]{display:none}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.full{grid-column:1/-1}
+.actions{display:flex;gap:8px;margin-top:12px}
+.actions .btn{flex:1}
+.summary{padding:11px;margin-bottom:14px;border:1px solid #e4dcfa;border-radius:10px;background:#faf8ff;font-size:13px;line-height:1.55}
+.contract{margin-top:22px;padding:34px;background:#fff;box-shadow:0 10px 35px #25105a20;color:#171717;font:14px/1.5 Georgia,"Times New Roman",serif}
+.contract h2{text-align:center;font:700 18px/1.4 Arial,sans-serif}
+.contract h3{margin:18px 0 4px;font-size:14px}
+.contract p{margin:7px 0}
+.contract table{width:100%;border-collapse:collapse;font:12px Arial,sans-serif}
+.contract th,.contract td{border:1px solid #bbb;padding:6px;text-align:left}
+.sign{display:grid;grid-template-columns:1fr 1fr;gap:25px;margin-top:30px}
+.sign div{border-top:1px solid #333;padding-top:5px;text-align:center;font-size:12px}
+[hidden]{display:none!important}
+@media(max-width:600px){
+ body{padding:14px 10px 28px}
+ .stats{grid-template-columns:1fr}
+ .stat{display:flex;justify-content:space-between;align-items:center;text-align:left;gap:10px}
+ .stat span{min-height:0}
+ .stat b{margin:0}
+ .buttons{grid-template-columns:1fr}
+ .grid{grid-template-columns:1fr}
+ .full{grid-column:auto}
+ .card{padding:18px 15px}
+ .contract{padding:22px 16px}
+ .twobuttons{grid-template-columns:1fr}
+}
+@media print{
+ body{padding:0;background:#fff}
+ .brand,.box,.footer,.modal,.toolbar{display:none!important}
+ .contract{margin:0;padding:15mm;box-shadow:none}
+ .wrap{max-width:none}
+ @page{size:A4;margin:12mm}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header class="brand"><span class="logo">С</span><span>СУММА<br><small style="font-size:11px;color:#777;font-weight:500">Товарная рассрочка</small></span></header>
+<section class="box">
+<h1>Калькулятор рассрочки</h1>
+<p class="muted">Первоначальный взнос автоматически составляет 20% стоимости товара.</p>
+
+<div class="field">
+<label for="product">Наименование товара или услуги</label>
+<input class="input" id="product" value="Товар" autocomplete="off">
+</div>
+
+<div class="field">
+<label for="price">Стоимость товара</label>
+<div class="money"><input class="input" id="price" type="number" min="0" value="100000"><span>₽</span></div>
+<input id="priceRange" type="range" min="10000" max="1000000" step="1000" value="100000">
+<div class="ends"><span>10 000 ₽</span><span id="rangeMax">1 000 000 ₽</span></div>
+</div>
+
+<div class="field">
+<span class="label">Первоначальный взнос</span>
+<div class="readonly"><strong id="deposit">20 000 ₽</strong><span class="pill">20%</span></div>
+</div>
+
+<div class="field">
+<label for="months">Срок рассрочки</label>
+<input id="months" type="range" min="1" max="12" value="9">
+<div class="termrow"><span>Выбранный срок</span><strong id="monthsLabel">9 месяцев</strong></div>
+<div class="ends"><span>1 месяц</span><span>12 месяцев</span></div>
+</div>
+
+<div class="stats">
+<div class="stat"><span>Ежемесячный платёж</span><b id="monthly">—</b></div>
+<div class="stat"><span>Торговая наценка</span><b id="markup">—</b></div>
+<div class="stat"><span>Общая стоимость</span><b id="total">—</b></div>
+</div>
+
+<div class="buttons">
+<button class="btn" id="openShort" type="button">Заполнить анкету</button>
+<button class="btn secondary" id="openLong" type="button">Расширенная анкета</button>
+</div>
+<p class="note">Расширенная анкета включает паспортные данные и подготовку проекта договора.</p>
+<div class="share">
+<button class="btn secondary" id="share" type="button">Поделиться ссылкой с клиентом</button>
+<p class="note" id="shareStatus">Ссылка будет содержать товар, цену и срок.</p>
+</div>
+<p class="note">Проверьте ставку торговой наценки в коде перед реальными расчётами.</p>
+</section>
+
+<footer class="footer">Связаться по заявке: <a href="https://wa.me/79887836677" target="_blank" rel="noopener">WhatsApp +7 988 783-66-77</a></footer>
+</main>
+
+<div class="modal" id="shortModal" hidden>
+<section class="card" role="dialog" aria-modal="true">
+<div class="mhead">
+<div class="mbrand"><span class="logo">С</span><div><b>СУММА</b><span class="tag">Заявка на рассрочку</span></div></div>
+<button class="close" data-close="shortModal" type="button">×</button>
+</div>
+<h2>Заполнить анкету</h2>
+<p class="help">Укажите контакты и товар — заявка подготовится для отправки.</p>
+<form id="shortForm" novalidate>
+<div class="field"><label>Товар <span class="required">*</span></label><input class="input" name="product" id="shortProduct" required></div>
+<div class="field"><label>Место покупки <span class="required">*</span></label><input class="input" name="place" required placeholder="Город или магазин"></div>
+<div class="field"><label>Фамилия <span class="required">*</span></label><input class="input" name="surname" required></div>
+<div class="field"><label>Имя <span class="required">*</span></label><input class="input" name="first" required></div>
+<div class="field"><label>Отчество</label><input class="input" name="middle"></div>
+<div class="field"><label>Дата рождения <span class="required">*</span></label><input class="input" name="birth" type="date" required></div>
+<div class="field"><label>Личный телефон <span class="required">*</span></label><input class="input" name="phone" type="tel" required placeholder="+7 900 000-00-00"></div>
+<button class="btn" type="submit" style="width:100%;background:linear-gradient(100deg,#2110d8,#761de2);color:white">Подготовить заявку</button>
+<div class="success" id="success" hidden>
+<b>Заявка готова.</b> Проверьте текст и отправьте его в WhatsApp.
+<pre class="message" id="message"></pre>
+<div class="twobuttons">
+<a class="btn green" id="sendWA" href="#" target="_blank" rel="noopener">Отправить в WhatsApp</a>
+<button class="btn soft" id="copyMsg" type="button">Скопировать текст</button>
+</div>
+<button class="btn soft" id="continueLong" type="button" style="width:100%;margin-top:8px">Продолжить в расширенную анкету</button>
+</div>
+</form>
+<p class="help">Паспортные данные не отправляются в первичном сообщении.</p>
+</section>
+</div>
+
+<div class="modal" id="longModal" hidden>
+<section class="card wide" role="dialog" aria-modal="true">
+<div class="mhead">
+<div class="mbrand"><span class="logo">С</span><div><b>СУММА</b><span class="tag">Расширенная анкета и договор</span></div></div>
+<button class="close" data-close="longModal" type="button">×</button>
+</div>
+<h2>Расширенная анкета</h2>
+<p class="help">Данные короткой анкеты и выбранный товар уже перенесены.</p>
+<div class="stepbar"><span id="step1" class="on">1 Покупатель</span><span id="step2">2 Паспорт</span><span id="step3">3 Договор</span></div>
+
+<form id="longForm" novalidate>
+<section class="step" data-step="1">
+<div class="grid">
+<div class="field full"><label>Товар *</label><input class="input" name="product" id="longProduct" required></div>
+<div class="field full"><label>Место покупки *</label><input class="input" name="place" required></div>
+<div class="field"><label>Фамилия *</label><input class="input" name="surname" required></div>
+<div class="field"><label>Имя *</label><input class="input" name="first" required></div>
+<div class="field"><label>Отчество</label><input class="input" name="middle"></div>
+<div class="field"><label>Дата рождения *</label><input class="input" type="date" name="birth" required></div>
+<div class="field full"><label>Телефон *</label><input class="input" type="tel" name="phone" required></div>
+</div>
+<button class="btn" type="button" data-next="2" style="width:100%;background:linear-gradient(100deg,#2110d8,#761de2);color:white">Далее</button>
+</section>
+
+<section class="step" data-step="2" hidden>
+<div class="grid">
+<div class="field full"><label>Серия и номер паспорта *</label><input class="input" name="passport" required></div>
+<div class="field"><label>Дата выдачи *</label><input class="input" type="date" name="issuedDate" required></div>
+<div class="field"><label>Код подразделения</label><input class="input" name="passportCode"></div>
+<div class="field full"><label>Кем выдан паспорт *</label><input class="input" name="issuedBy" required></div>
+<div class="field full"><label>Адрес регистрации *</label><textarea name="address" required></textarea></div>
+</div>
+<div class="actions"><button class="btn soft" type="button" data-back="1">Назад</button><button class="btn" type="button" data-next="3" style="background:linear-gradient(100deg,#2110d8,#761de2);color:white">Далее</button></div>
+</section>
+
+<section class="step" data-step="3" hidden>
+<div class="summary" id="summary"></div>
+<div class="grid">
+<div class="field"><label>Номер договора *</label><input class="input" name="contractNo" id="contractNo" required><small>Автоматически ставится дата; можно изменить.</small></div>
+<div class="field"><label>Дата договора *</label><input class="input" type="date" name="contractDate" id="contractDate" required></div>
+<div class="field full"><label>Продавец *</label><input class="input" name="seller" id="seller" required></div>
+<div class="field full"><label>Дата первого платежа *</label><input class="input" type="date" name="firstPay" id="firstPay" required></div>
+<div class="field full"><label>Доп. сведения о товаре</label><textarea name="details"></textarea></div>
+</div>
+<div class="actions"><button class="btn soft" type="button" data-back="2">Назад</button><button class="btn" type="button" id="makeContract" style="background:linear-gradient(100deg,#2110d8,#761de2);color:white">Сформировать договор</button></div>
+</section>
+</form>
+<p class="help">Паспортные данные в этой демо-странице не отправляются и не сохраняются.</p>
+</section>
+</div>
+
+<section class="wrap contract" id="contractArea" hidden>
+<div class="toolbar"><button class="btn soft" onclick="window.print()">Печать / сохранить в PDF</button></div>
+<article id="contractText"></article>
+</section>
+
+<script>
+const $=s=>document.getElementById(s), DOWN=.20, RATE=.038, MAX=12, SELLER='Газиев Руслан Магомедович', WA='79887836677';
+const rub=n=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(Math.round(Number(n)||0))+' ₽';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dInput=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const parseD=s=>{if(!s)return null;let[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const dateText=d=>d?new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',year:'numeric'}).format(d):'—';
+const addM=(d,n)=>{let day=d.getDate(),x=new Date(d.getFullYear(),d.getMonth()+n,1);x.setDate(Math.min(day,new Date(x.getFullYear(),x.getMonth()+1,0).getDate()));return x};
+const plural=n=>n%10===1&&n%100!==11?'месяц':[2,3,4].includes(n%10)&&![12,13,14].includes(n%100)?'месяца':'месяцев';
+
+let today=new Date();today.setHours(0,0,0,0);
+$('contractDate').value=dInput(today);
+$('firstPay').value=dInput(addM(today,1));
+$('seller').value=SELLER;
+
+let noManual=false;
+function dateNo(){
+ if(noManual)return;
+ let d=parseD($('contractDate').value);
+ $('contractNo').value=d?`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`:'';
+}
+dateNo();
+$('contractDate').addEventListener('change',dateNo);
+$('contractNo').addEventListener('input',()=>noManual=true);
+
+function calc(){
+ let p=Math.max(0,Math.round(+$('price').value||0));
+ let m=Math.min(MAX,Math.max(1,+$('months').value||1));
+ let dp=Math.round(p*DOWN),fin=p-dp,mark=Math.round(fin*RATE*m),total=p+mark,rest=total-dp;
+ return{p,m,dp,fin,mark,total,rest}
+}
+function render(){
+ let x=calc();
+ $('deposit').textContent=rub(x.dp);
+ $('monthsLabel').textContent=x.m+' '+plural(x.m);
+ $('monthly').textContent=rub(x.rest/x.m);
+ $('markup').textContent=rub(x.mark);
+ $('total').textContent=rub(x.total);
+ $('priceRange').max=Math.max(1000000,Math.ceil(x.p/10000)*10000);
+ $('priceRange').value=Math.max(10000,x.p);
+ $('rangeMax').textContent=rub($('priceRange').max);
+ $('shortProduct').value=$('product').value;
+ $('longProduct').value=$('product').value;
+ summary()
+}
+$('price').oninput=render;
+$('priceRange').oninput=()=>{$('price').value=$('priceRange').value;render()};
+$('months').oninput=render;
+$('product').oninput=()=>{$('shortProduct').value=$('product').value;$('longProduct').value=$('product').value;summary()};
+
+function applyLink(){
+ let q=new URLSearchParams(location.search);
+ if(q.get('product'))$('product').value=q.get('product').slice(0,100);
+ if(+q.get('price')>0)$('price').value=Math.round(+q.get('price'));
+ if(+q.get('months')>0)$('months').value=Math.min(MAX,Math.max(1,+q.get('months')))
+}
+function open(id){$(id).hidden=false;document.body.style.overflow='hidden'}
+function close(id){$(id).hidden=true;document.body.style.overflow=''}
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>close(b.dataset.close));
+document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)close(m.id)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal').forEach(m=>{if(!m.hidden)close(m.id)})}});
+
+$('openShort').onclick=()=>{$('shortProduct').value=$('product').value;open('shortModal')};
+$('openLong').onclick=()=>{copyShort();open('longModal');show(1)};
+function copyShort(){
+ ['product','place','surname','first','middle','birth','phone'].forEach(n=>{
+  let a=$('shortForm').elements[n],b=$('longForm').elements[n];
+  if(a&&b&&a.value)b.value=a.value
+ });
+ $('longProduct').value=$('shortProduct').value||$('product').value;
+ summary()
+}
+$('shortForm').addEventListener('input',e=>{
+ let n=e.target.name;
+ if(!n)return;
+ let other=$('longForm').elements[n];
+ if(other)other.value=e.target.value;
+ if(n==='product'){$('product').value=e.target.value;$('longProduct').value=e.target.value}
+ if(!$('success').hidden)makeMessage();
+ summary()
+});
+function shortVal(n){return $('shortForm').elements[n]?.value.trim()||''}
+function makeMessage(){
+ let x=calc(),name=[shortVal('surname'),shortVal('first'),shortVal('middle')].filter(Boolean).join(' ');
+ let msg=[
+  'Ас-саляму алейкум ва-рахмату-Ллахи ва-баракятух!',
+  '',
+  'Прошу рассмотреть заявку на товарную рассрочку.',
+  '',
+  'Данные покупателя:',
+  `ФИО: ${name}`,
+  `Телефон: ${shortVal('phone')}`,
+  `Дата рождения: ${dateText(parseD(shortVal('birth')))}`,
+  `Место покупки: ${shortVal('place')}`,
+  '',
+  'Данные покупки:',
+  `Товар: ${shortVal('product')||$('product').value}`,
+  `Стоимость товара: ${rub(x.p)}`,
+  `Первоначальный взнос (20%): ${rub(x.dp)}`,
+  `Срок рассрочки: ${x.m} ${plural(x.m)}`,
+  `Средний ежемесячный платёж: ${rub(x.rest/x.m)}`,
+  `Торговая наценка: ${rub(x.mark)}`,
+  `Общая стоимость по договору: ${rub(x.total)}`,
+  `Остаток после взноса: ${rub(x.rest)}`,
+  '',
+  'Прошу сообщить о возможности одобрения рассрочки.',
+  `Продавец: ${SELLER}`
+ ].join('\n');
+ $('message').textContent=msg;
+ $('sendWA').href=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`
+}
+$('shortForm').onsubmit=e=>{
+ e.preventDefault();
+ for(let f of $('shortForm').querySelectorAll('[required]')){
+  if(!f.checkValidity()){f.reportValidity();return}
+ }
+ makeMessage();
+ $('success').hidden=false;
+ copyShort()
+};
+$('continueLong').onclick=()=>{copyShort();close('shortModal');open('longModal');show(1)};
+$('copyMsg').onclick=async()=>{
+ try{
+  await navigator.clipboard.writeText($('message').textContent);
+  $('copyMsg').textContent='Скопировано';
+  setTimeout(()=>$('copyMsg').textContent='Скопировать текст',1500)
+ }catch{alert('Скопируйте текст сообщения вручную.')}
+};
+$('share').onclick=async()=>{
+ let u=new URL(location.href),x=calc();
+ u.search='';
+ u.searchParams.set('product',$('product').value);
+ u.searchParams.set('price',x.p);
+ u.searchParams.set('months',x.m);
+ try{
+  if(navigator.share)await navigator.share({title:'Калькулятор СУММА',url:u.href});
+  else{
+   await navigator.clipboard.writeText(u.href);
+   $('shareStatus').textContent='Ссылка скопирована — отправьте её клиенту.'
+  }
+ }catch(e){if(e.name!=='AbortError')$('shareStatus').textContent=u.href}
+};
+function show(n){
+ document.querySelectorAll('.step').forEach(s=>s.hidden=+s.dataset.step!==n);
+ [1,2,3].forEach(i=>$('step'+i).classList.toggle('on',i===n));
+ summary()
+}
+document.querySelectorAll('[data-next]').forEach(b=>b.onclick=()=>{
+ let s=document.querySelector(`.step[data-step="${b.dataset.next-1}"]`);
+ for(let f of s.querySelectorAll('[required]'))if(!f.checkValidity()){f.reportValidity();return}
+ show(+b.dataset.next)
+});
+document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>show(+b.dataset.back));
+function summary(){
+ if(!$('summary'))return;
+ let x=calc();
+ $('summary').innerHTML=`<b>Расчёт:</b><br>Товар: ${esc($('longProduct').value||$('product').value)}<br>Цена: ${rub(x.p)}<br>Первоначальный взнос (20%): ${rub(x.dp)}<br>Наценка: ${rub(x.mark)}<br>Остаток после взноса: ${rub(x.rest)}<br>Срок: ${x.m} ${plural(x.m)} · средний платёж: ${rub(x.rest/x.m)}`
+}
+function val(n){return $('longForm').elements[n]?.value.trim()||''}
+$('makeContract').onclick=()=>{
+ for(let f of $('longForm').querySelectorAll('[required]')){
+  if(!f.checkValidity()){
+   show(+f.closest('.step').dataset.step);
+   f.reportValidity();
+   return
+  }
+ }
+ let x=calc();
+ let name=[val('surname'),val('first'),val('middle')].filter(Boolean).join(' ');
+ let pass=val('passport')+(val('passportCode')?', код подразделения '+val('passportCode'):'');
+ let schedule=[],first=parseD(val('firstPay')),base=Math.floor(x.rest/x.m),extra=x.rest-base*x.m;
+ for(let i=0;i<x.m;i++)schedule.push(`<tr><td>${i+1}</td><td>${dateText(addM(first,i))}</td><td>${rub(base+(i<extra?1:0))}</td></tr>`);
+ let rows=schedule.join('');
+ $('contractText').innerHTML=`<h2>ПРОЕКТ ДОГОВОРА КУПЛИ-ПРОДАЖИ ТОВАРА В РАССРОЧКУ № ${esc(val('contractNo'))}</h2>
+ <p style="text-align:center">Дата: ${dateText(parseD(val('contractDate')))}<br>Место: ${esc(val('place'))}</p>
+ <p><b>Продавец:</b> ${esc(val('seller'))}</p>
+ <p><b>Покупатель:</b> ${esc(name)}. Телефон: ${esc(val('phone'))}. Дата рождения: ${dateText(parseD(val('birth')))}.</p>
+ <p><b>Паспорт:</b> ${esc(pass)}, выдан ${esc(val('issuedBy'))} ${dateText(parseD(val('issuedDate')))}. Адрес: ${esc(val('address'))}.</p>
+ <h3>1. ТОВАР</h3><p>Товар: <b>${esc(val('product'))}</b>. Место покупки: ${esc(val('place'))}. Дополнительные сведения: ${esc(val('details')||'не указаны')}.</p>
+ <h3>2. ЦЕНА И ОПЛАТА</h3><p>Цена товара: ${rub(x.p)}. Первоначальный взнос (20%): ${rub(x.dp)}. Торговая наценка: ${rub(x.mark)}.</p>
+ <p>Цена договора: <b>${rub(x.total)}</b>. Остаток к оплате: <b>${rub(x.rest)}</b>. Срок: ${x.m} ${plural(x.m)}.</p>
+ <table><thead><tr><th>№</th><th>Дата</th><th>Платёж</th></tr></thead><tbody>${rows}</tbody></table>
+ <p>Цена фиксируется при заключении договора. Проценты на сумму долга и штрафы за просрочку не начисляются.</p>
+ <h3>3. РЕКВИЗИТЫ И ПОДПИСИ</h3><p>Продавец: ${esc(val('seller'))}. Покупатель: ${esc(name)}.</p>
+ <div class="sign"><div>Продавец / подпись</div><div>Покупатель / подпись</div></div>
+ <p style="text-align:center;font-size:11px"><em>Проект договора — проверьте условия и реквизиты перед подписанием.</em></p>`;
+ close('longModal');
+ $('contractArea').hidden=false;
+ $('contractArea').scrollIntoView({behavior:'smooth'})
+};
+applyLink();
+render();
+</script>
+</body>
+</html>
